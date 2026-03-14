@@ -13,41 +13,43 @@ interface Props {
 }
 
 // ── Label maps ──────────────────────────────────────────────────────────────
-const SECTION_META: Record<
-  string,
-  { label: string; color: string; icon: string }
-> = {
-  warmup: { label: 'Warm-Up', color: '#f59e0b', icon: '🔥' },
-  technical: { label: 'Technical', color: '#3b82f6', icon: '⚙️' },
-  main: { label: 'Main Drill', color: '#10b981', icon: '🎯' },
-  game: { label: 'Applied Game', color: '#ef4444', icon: '⚽' },
-  cooldown: { label: 'Cool-Down', color: '#a855f7', icon: '🧘' },
+const SECTION_META: Record<string, { label: string; color: string; icon: string }> = {
+  warmup:    { label: 'Warm-Up',      color: '#f59e0b', icon: '🔥' },
+  technical: { label: 'Technical',    color: '#3b82f6', icon: '⚙️' },
+  main:      { label: 'Main Drill',   color: '#10b981', icon: '🎯' },
+  game:      { label: 'Applied Game', color: '#ef4444', icon: '⚽' },
+  cooldown:  { label: 'Cool-Down',    color: '#a855f7', icon: '🧘' },
 };
 
 const FOCUS_LABELS: Record<string, string> = {
-  possession: 'Possession',
-  finishing: 'Finishing',
-  'first-touch': 'First Touch',
+  'possession':    'Possession',
+  'finishing':     'Finishing',
+  'first-touch':   'First Touch',
   'close-control': 'Close Control',
-  dribbling: 'Dribbling',
-  'long-passing': 'Long Passing',
-  'small-sided': 'Small Sided',
-  fitness: 'Fitness',
+  'dribbling':     'Dribbling',
+  'long-passing':  'Long Passing',
+  'small-sided':   'Small Sided',
+  'fitness':       'Fitness',
 };
 
 const AGE_LABELS: Record<string, string> = {
-  'u8-u10': 'U8–U10',
-  'u11-u13': 'U11–U13',
-  'u14-u16': 'U14–U16',
-  'u17-u19': 'U17–U19',
-  'college-adult': 'College / Adult',
+  'u8-u10':        'U8–U10',
+  'u11-u13':       'U11–U13',
+  'u14-u16':       'U14–U16',
+  'u17-u19':       'U17–U19',
+  'college-adult': 'Adult',
 };
 
 const FIELD_LABELS: Record<string, string> = {
-  'small-box': 'Small Box',
+  'small-box':  'Small Box',
   'small-half': 'Small Half',
-  'full-half': 'Full Half',
+  'full-half':  'Full Half',
   'full-field': 'Full Field',
+};
+
+const SESSION_TYPE_LABELS: Record<string, string> = {
+  personal: 'My Group',
+  trainer:  'Trainer Plan',
 };
 
 // ── Empty state ─────────────────────────────────────────────────────────────
@@ -73,9 +75,7 @@ function EmptySession({ onBuildNew }: { onBuildNew: () => void }) {
 
 // ── Drill Card ──────────────────────────────────────────────────────────────
 function DrillCard({
-  sd,
-  onSwap,
-  onRemove,
+  sd, onSwap, onRemove,
 }: {
   sd: SessionDrill;
   onSwap: (sd: SessionDrill) => void;
@@ -86,31 +86,27 @@ function DrillCard({
   const meta = SECTION_META[section];
 
   const equipLabels = drill.equipment.map((e) =>
-    e.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    e.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
   );
 
   return (
     <div className="bg-[#0d1224] border border-[#1a2340] rounded-2xl overflow-hidden">
-      {/* Section badge + header */}
-      <div className="flex items-center gap-2.5 px-4 pt-4 pb-0">
-        <span className="text-sm">{meta.icon}</span>
+      {/* Section badge */}
+      <div className="flex items-center gap-2.5 px-4 pt-4">
         <span
-          className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full"
-          style={{ color: meta.color, backgroundColor: `${meta.color}18` }}
+          className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+          style={{ color: meta.color, backgroundColor: `${meta.color}15` }}
         >
-          {meta.label}
+          {meta.icon} {meta.label}
         </span>
         <span className="ml-auto text-xs font-bold text-white tabular-nums">
           {duration} min
         </span>
       </div>
 
-      {/* Diagram + Info */}
+      {/* Diagram + info */}
       <div className="flex gap-3 p-4">
-        <FieldDiagram
-          type={drill.diagramType}
-          className="w-28 h-20 shrink-0 rounded-xl"
-        />
+        <FieldDiagram type={drill.diagramType} className="w-28 h-20 shrink-0 rounded-xl" />
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-bold text-white leading-tight">{drill.title}</h4>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -121,7 +117,6 @@ function DrillCard({
               {drill.setupSize}
             </span>
           </div>
-          {/* Equipment */}
           <div className="flex flex-wrap gap-1 mt-1.5">
             {equipLabels.slice(0, 3).map((e) => (
               <span key={e} className="text-[10px] text-emerald-400/70 bg-emerald-900/20 px-1.5 py-0.5 rounded">
@@ -132,7 +127,7 @@ function DrillCard({
         </div>
       </div>
 
-      {/* Expandable description */}
+      {/* Expandable detail */}
       {expanded && (
         <div className="px-4 pb-3 space-y-3 border-t border-[#1a2340] pt-3">
           <p className="text-xs text-slate-400 leading-relaxed">{drill.description}</p>
@@ -183,71 +178,60 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
   const totalTime = session.drills.reduce((s, d) => s + d.duration, 0);
 
   const handleRemove = (id: string) => {
-    const updated: Session = {
+    const remaining = session.drills.filter((d) => d.id !== id);
+    onUpdate({
       ...session,
-      drills: session.drills.filter((d) => d.id !== id),
-      totalTime: session.drills
-        .filter((d) => d.id !== id)
-        .reduce((s, d) => s + d.duration, 0),
-    };
-    onUpdate(updated);
+      drills: remaining,
+      totalTime: remaining.reduce((s, d) => s + d.duration, 0),
+    });
   };
 
   const handleSwap = (replacement: Drill) => {
     if (!swapping) return;
-    const updated: Session = {
+    onUpdate({
       ...session,
       drills: session.drills.map((d) =>
-        d.id === swapping.id ? { ...d, drill: replacement } : d
+        d.id === swapping.id ? { ...d, drill: replacement } : d,
       ),
-    };
-    onUpdate(updated);
+    });
     setSwapping(null);
   };
 
-  const formData: SessionFormData = {
-    ageGroup: session.ageGroup,
-    skillLevel: session.skillLevel,
-    playerCount: session.playerCount,
-    fieldSize: session.fieldSize,
-    sessionLength: session.sessionLength,
-    focus: session.focus,
-    equipment: session.equipment,
-    sessionType: session.sessionType,
-  };
-
   const getAlternatives = (sd: SessionDrill) =>
-    alternativesFor(sd.drill.id, formData, sd.section);
+    alternativesFor(sd.drill.id, session.playerCount, session.skillLevel, session.ageGroup);
+
+  const focusLabel = session.focuses.map((f) => FOCUS_LABELS[f] ?? f).join(' · ');
 
   return (
     <>
       <div className="pb-6">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-[#080c18]/95 backdrop-blur-xl border-b border-[#1a2340]">
-          <div className="px-5 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-bold text-white">Your Session</h2>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {FOCUS_LABELS[session.focus]} · {AGE_LABELS[session.ageGroup]}
-                </p>
-              </div>
-              <button
-                onClick={onBuildNew}
-                className="px-3.5 py-2 text-xs font-semibold text-blue-400 bg-blue-600/10 border border-blue-600/20 rounded-xl active:bg-blue-600/20 transition-colors"
-              >
-                New Session
-              </button>
+          <div className="px-5 py-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold text-white">Your Session</h2>
+              <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[220px]">
+                {focusLabel} · {AGE_LABELS[session.ageGroup]}
+              </p>
             </div>
+            <button
+              onClick={onBuildNew}
+              className="px-3.5 py-2 text-xs font-semibold text-blue-400 bg-blue-600/10 border border-blue-600/20 rounded-xl active:bg-blue-600/20 transition-colors shrink-0"
+            >
+              New Session
+            </button>
           </div>
 
-          {/* Session stats */}
+          {/* Stats strip */}
           <div className="flex border-t border-[#1a2340]">
             {[
               { label: 'Duration', value: `${totalTime} min` },
-              { label: 'Players', value: String(session.playerCount) },
-              { label: 'Field', value: FIELD_LABELS[session.fieldSize] },
-              { label: 'Level', value: session.skillLevel.charAt(0).toUpperCase() + session.skillLevel.slice(1) },
+              { label: 'Players',  value: String(session.playerCount) },
+              { label: 'Field',    value: FIELD_LABELS[session.fieldSize] },
+              {
+                label: 'Type',
+                value: SESSION_TYPE_LABELS[session.sessionType] ?? session.sessionType,
+              },
             ].map(({ label, value }) => (
               <div key={label} className="flex-1 text-center py-3 border-r border-[#1a2340] last:border-r-0">
                 <p className="text-xs font-bold text-white">{value}</p>
@@ -271,12 +255,7 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
             </div>
           ) : (
             session.drills.map((sd) => (
-              <DrillCard
-                key={sd.id}
-                sd={sd}
-                onSwap={setSwapping}
-                onRemove={handleRemove}
-              />
+              <DrillCard key={sd.id} sd={sd} onSwap={setSwapping} onRemove={handleRemove} />
             ))
           )}
         </div>
@@ -284,12 +263,12 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
         {/* Time summary */}
         {session.drills.length > 0 && (
           <div className="mx-5 mt-4 p-4 bg-[#0d1224] border border-[#1a2340] rounded-2xl">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-slate-500 font-medium">Total session time</span>
               <span className="text-base font-bold text-white">{totalTime} min</span>
             </div>
-            {/* Mini timeline */}
-            <div className="flex gap-0.5 mt-3 h-2 rounded-full overflow-hidden">
+            {/* Timeline bar */}
+            <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
               {session.drills.map((sd) => (
                 <div
                   key={sd.id}

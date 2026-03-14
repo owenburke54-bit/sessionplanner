@@ -15,31 +15,25 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [session, setSession] = useState<Session | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [initialSessionType, setInitialSessionType] = useState<SessionType>('small-group');
+  const [initialSessionType, setInitialSessionType] = useState<SessionType>('personal');
 
   const handleStartBuild = useCallback((type: SessionType) => {
     setInitialSessionType(type);
     setActiveTab('build');
   }, []);
 
-  const handleGenerate = useCallback(
-    async (formData: SessionFormData) => {
-      setIsGenerating(true);
-      // Short deliberate delay to let the loading state feel intentional
-      await new Promise((r) => setTimeout(r, 1400));
-      const generated = generateSession(formData);
-      setSession(generated);
-      setIsGenerating(false);
-      setActiveTab('session');
-    },
-    []
-  );
+  const handleGenerate = useCallback(async (formData: SessionFormData) => {
+    setIsGenerating(true);
+    await new Promise((r) => setTimeout(r, 1400));
+    const generated = generateSession(formData);
+    setSession(generated);
+    setIsGenerating(false);
+    setActiveTab('session');
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#080c18] text-white">
-      {/* Max-width container centred on desktop */}
       <div className="relative max-w-[430px] mx-auto min-h-screen flex flex-col">
-        {/* Main scrollable area */}
         <main className="flex-1 pb-[80px]">
           {activeTab === 'home' && (
             <HomeScreen
@@ -63,12 +57,7 @@ export default function App() {
             />
           )}
         </main>
-
-        <BottomNav
-          active={activeTab}
-          onChange={setActiveTab}
-          hasSession={!!session}
-        />
+        <BottomNav active={activeTab} onChange={setActiveTab} hasSession={!!session} />
       </div>
     </div>
   );

@@ -12,15 +12,16 @@ export type TrainingFocus =
   | 'small-sided'
   | 'fitness';
 export type Equipment =
+  | 'balls'
   | 'cones'
-  | 'pinnies'
+  | 'poles'
   | 'small-goals'
   | 'full-goals'
   | 'rebounder'
-  | 'balls'
   | 'mannequins'
   | 'agility-ladder';
-export type SessionType = 'solo' | 'small-group' | 'trainer';
+// 'personal' = "For Me / My Group", 'trainer' = "Trainer Plan"
+export type SessionType = 'personal' | 'trainer';
 export type DiagramType =
   | 'rondo'
   | 'passing-pattern'
@@ -35,7 +36,7 @@ export interface Drill {
   id: string;
   title: string;
   category: TrainingFocus;
-  duration: number; // suggested minutes
+  duration: number; // suggested minutes (used in library display)
   description: string;
   playersMin: number;
   playersMax: number;
@@ -46,12 +47,13 @@ export interface Drill {
   skillLevels: SkillLevel[];
   ageGroups: AgeGroup[];
   complexity: 'low' | 'medium' | 'high';
+  soloFriendly: boolean; // can be done with 1 player
 }
 
 export interface SessionDrill {
   id: string;
   drill: Drill;
-  duration: number;
+  duration: number; // actual allocated duration in the session
   section: SessionSection;
 }
 
@@ -61,7 +63,7 @@ export interface Session {
   playerCount: number;
   fieldSize: FieldSize;
   sessionLength: SessionLength;
-  focus: TrainingFocus;
+  focuses: TrainingFocus[]; // multi-select
   equipment: Equipment[];
   sessionType: SessionType;
   drills: SessionDrill[];
@@ -74,7 +76,7 @@ export interface SessionFormData {
   playerCount: number;
   fieldSize: FieldSize;
   sessionLength: SessionLength;
-  focus: TrainingFocus;
+  focuses: TrainingFocus[]; // multi-select
   equipment: Equipment[];
   sessionType: SessionType;
 }

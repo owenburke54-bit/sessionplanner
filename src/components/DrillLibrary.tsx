@@ -4,44 +4,31 @@ import { useState, useMemo } from 'react';
 import { drills } from '@/data/drills';
 import { Drill, TrainingFocus } from '@/types';
 import FieldDiagram from './FieldDiagram';
+import { FOCUS_ICONS } from './Icons';
 
 // ── Colour + label maps ─────────────────────────────────────────────────────
-const CATEGORY_META: Record<
-  TrainingFocus,
-  { label: string; color: string; icon: string }
-> = {
-  possession: { label: 'Possession', color: '#3b82f6', icon: '⚽' },
-  finishing: { label: 'Finishing', color: '#ef4444', icon: '🎯' },
-  'first-touch': { label: 'First Touch', color: '#a855f7', icon: '🦶' },
-  'close-control': { label: 'Close Control', color: '#14b8a6', icon: '🔄' },
-  dribbling: { label: 'Dribbling', color: '#f59e0b', icon: '⚡' },
-  'long-passing': { label: 'Long Passing', color: '#22c55e', icon: '📡' },
-  'small-sided': { label: 'Small Sided', color: '#ec4899', icon: '🏃' },
-  fitness: { label: 'Fitness', color: '#f97316', icon: '💪' },
+const CATEGORY_META: Record<TrainingFocus, { label: string; color: string }> = {
+  'possession':    { label: 'Possession',    color: '#3b82f6' },
+  'finishing':     { label: 'Finishing',     color: '#ef4444' },
+  'first-touch':   { label: 'First Touch',   color: '#a855f7' },
+  'close-control': { label: 'Close Control', color: '#14b8a6' },
+  'dribbling':     { label: 'Dribbling',     color: '#f59e0b' },
+  'long-passing':  { label: 'Long Passing',  color: '#22c55e' },
+  'small-sided':   { label: 'Small Sided',   color: '#ec4899' },
+  'fitness':       { label: 'Fitness',       color: '#f97316' },
 };
 
 const ALL_CATEGORIES: TrainingFocus[] = [
-  'possession',
-  'finishing',
-  'first-touch',
-  'close-control',
-  'dribbling',
-  'long-passing',
-  'small-sided',
-  'fitness',
+  'possession', 'finishing', 'first-touch', 'close-control',
+  'dribbling', 'long-passing', 'small-sided', 'fitness',
 ];
 
-// ── Drill detail card (expanded) ─────────────────────────────────────────────
-function DrillDetailSheet({
-  drill,
-  onClose,
-}: {
-  drill: Drill;
-  onClose: () => void;
-}) {
+// ── Drill detail sheet ───────────────────────────────────────────────────────
+function DrillDetailSheet({ drill, onClose }: { drill: Drill; onClose: () => void }) {
   const meta = CATEGORY_META[drill.category];
+  const FocusIcon = FOCUS_ICONS[drill.category];
   const equipLabels = drill.equipment.map((e) =>
-    e.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+    e.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
   );
 
   return (
@@ -62,12 +49,13 @@ function DrillDetailSheet({
         {/* Content */}
         <div className="px-5 pt-4 pb-10 overflow-y-auto max-h-[55vh]">
           {/* Category badge */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-3 flex-wrap">
             <span
-              className="text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
+              className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full"
               style={{ color: meta.color, backgroundColor: `${meta.color}18` }}
             >
-              {meta.icon} {meta.label}
+              <FocusIcon className="w-3.5 h-3.5" />
+              {meta.label}
             </span>
             <span className="text-[11px] text-slate-500 bg-[#1a2340] px-2 py-0.5 rounded-full">
               {drill.duration} min
@@ -75,6 +63,11 @@ function DrillDetailSheet({
             <span className="text-[11px] text-slate-500 bg-[#1a2340] px-2 py-0.5 rounded-full capitalize">
               {drill.complexity}
             </span>
+            {drill.soloFriendly && (
+              <span className="text-[11px] text-blue-400 bg-blue-900/20 border border-blue-800/30 px-2 py-0.5 rounded-full">
+                Solo OK
+              </span>
+            )}
           </div>
 
           <h3 className="text-xl font-bold text-white mb-2">{drill.title}</h3>
@@ -83,15 +76,15 @@ function DrillDetailSheet({
           {/* Detail grid */}
           <div className="grid grid-cols-2 gap-2.5 mb-5">
             {[
-              { label: 'Players', value: `${drill.playersMin}–${drill.playersMax}` },
-              { label: 'Setup', value: drill.setupSize },
+              { label: 'Players',    value: `${drill.playersMin}–${drill.playersMax}` },
+              { label: 'Setup',      value: drill.setupSize },
               {
                 label: 'Level',
                 value: drill.skillLevels.map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(', '),
               },
               {
                 label: 'Age Groups',
-                value: drill.ageGroups.length === 5 ? 'All ages' : drill.ageGroups.join(', '),
+                value: drill.ageGroups.length === 5 ? 'All ages' : drill.ageGroups.map((a) => a.replace('-', '–')).join(', '),
               },
             ].map(({ label, value }) => (
               <div key={label} className="bg-[#111827] border border-[#1a2340] rounded-xl p-3">
@@ -125,7 +118,7 @@ function DrillDetailSheet({
           </div>
         </div>
 
-        {/* Close button */}
+        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#1a2340] flex items-center justify-center text-slate-400"
@@ -142,30 +135,35 @@ function DrillDetailSheet({
 // ── Library card ─────────────────────────────────────────────────────────────
 function LibraryCard({ drill, onClick }: { drill: Drill; onClick: () => void }) {
   const meta = CATEGORY_META[drill.category];
+  const FocusIcon = FOCUS_ICONS[drill.category];
+
   return (
     <button
       onClick={onClick}
       className="flex flex-col bg-[#0d1224] border border-[#1a2340] rounded-2xl overflow-hidden active:scale-[0.98] transition-transform text-left"
     >
-      {/* Diagram */}
-      <FieldDiagram type={drill.diagramType} className="w-full h-32" />
-      {/* Info */}
+      <FieldDiagram type={drill.diagramType} className="w-full h-28" />
       <div className="p-3">
         <div className="flex items-center gap-1.5 mb-1.5">
           <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+            className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full"
             style={{ color: meta.color, backgroundColor: `${meta.color}18` }}
           >
-            {meta.icon} {meta.label}
+            <FocusIcon className="w-2.5 h-2.5" />
+            {meta.label}
           </span>
         </div>
-        <h4 className="text-sm font-bold text-white leading-tight line-clamp-1">{drill.title}</h4>
-        <div className="flex items-center gap-1.5 mt-1.5">
+        <h4 className="text-sm font-bold text-white leading-tight line-clamp-2 min-h-[2.5rem]">{drill.title}</h4>
+        <div className="flex items-center gap-1.5 mt-2">
           <span className="text-[10px] text-slate-500">{drill.duration}m</span>
           <span className="text-[10px] text-slate-700">·</span>
           <span className="text-[10px] text-slate-500">{drill.playersMin}–{drill.playersMax}p</span>
-          <span className="text-[10px] text-slate-700">·</span>
-          <span className="text-[10px] text-slate-500 capitalize">{drill.complexity}</span>
+          {drill.soloFriendly && (
+            <>
+              <span className="text-[10px] text-slate-700">·</span>
+              <span className="text-[10px] text-blue-400/70">Solo</span>
+            </>
+          )}
         </div>
       </div>
     </button>
@@ -180,16 +178,14 @@ export default function DrillLibrary() {
 
   const filtered = useMemo(() => {
     let list = drills;
-    if (activeCategory !== 'all') {
-      list = list.filter((d) => d.category === activeCategory);
-    }
+    if (activeCategory !== 'all') list = list.filter((d) => d.category === activeCategory);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter(
         (d) =>
           d.title.toLowerCase().includes(q) ||
           d.description.toLowerCase().includes(q) ||
-          d.category.toLowerCase().includes(q)
+          d.category.toLowerCase().includes(q),
       );
     }
     return list;
@@ -246,26 +242,20 @@ export default function DrillLibrary() {
             {ALL_CATEGORIES.map((cat) => {
               const meta = CATEGORY_META[cat];
               const active = activeCategory === cat;
+              const FocusIcon = FOCUS_ICONS[cat];
               return (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className="shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold border transition-all"
+                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold border transition-all"
                   style={
                     active
-                      ? {
-                          backgroundColor: `${meta.color}20`,
-                          borderColor: `${meta.color}60`,
-                          color: meta.color,
-                        }
-                      : {
-                          backgroundColor: '#0d1224',
-                          borderColor: '#1a2340',
-                          color: '#94a3b8',
-                        }
+                      ? { backgroundColor: `${meta.color}20`, borderColor: `${meta.color}55`, color: meta.color }
+                      : { backgroundColor: '#0d1224', borderColor: '#1a2340', color: '#94a3b8' }
                   }
                 >
-                  {meta.icon} {meta.label}
+                  <FocusIcon className="w-3 h-3" />
+                  {meta.label}
                 </button>
               );
             })}
@@ -294,17 +284,12 @@ export default function DrillLibrary() {
         ) : (
           <div className="px-5 grid grid-cols-2 gap-3">
             {filtered.map((drill) => (
-              <LibraryCard
-                key={drill.id}
-                drill={drill}
-                onClick={() => setSelected(drill)}
-              />
+              <LibraryCard key={drill.id} drill={drill} onClick={() => setSelected(drill)} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Detail sheet */}
       {selected && (
         <DrillDetailSheet drill={selected} onClose={() => setSelected(null)} />
       )}
