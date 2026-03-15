@@ -8,6 +8,7 @@ import {
   SkillLevel,
   AgeGroup,
   TrainingFocus,
+  Equipment,
 } from '@/types';
 
 // ── Time allocation ─────────────────────────────────────────────────────────
@@ -224,24 +225,49 @@ export function generateSession(form: SessionFormData): Session {
 }
 
 // ── Swap alternatives ──────────────────────────────────────────────────────
-// Returns alternative drills from the same category as the current drill.
+// Returns exactly 3 curated alternatives for a given drill in context.
 export function alternativesFor(
   currentDrillId: string,
   playerCount: number,
   skillLevel: SkillLevel,
   ageGroup: AgeGroup,
+  availableEquipment?: Equipment[],
 ): Drill[] {
   const current = allDrills.find((d) => d.id === currentDrillId);
   if (!current) return [];
 
-  return allDrills
-    .filter(
-      (d) =>
-        d.id !== currentDrillId &&
-        d.category === current.category &&
-        d.skillLevels.includes(skillLevel) &&
-        d.ageGroups.includes(ageGroup) &&
-        (playerCount === 1 ? d.soloFriendly : d.playersMin <= playerCount),
-    )
-    .slice(0, 8);
+  const isSolo = playerCount === 1;
+
+  // Build pool: same category, compatible players/skill/age
+  const pool = allDrills.filter((d) => {
+    if (d.id === currentDrillId) return false;
+    if (d.category !== current.category) return false;
+    if (!d.skillLevels.includes(skillLevel)) return false;
+    if (!d.ageGroups.includes(ageGroup)) return false;
+    if (isSolo && !d.soloFriendly) return false;
+    if (!isSolo && d.playersMin > playerCount) return false;
+    return true;
+  });
+
+  // If we have equipment context, prefer drills whose equipment is available
+  if (availableEquipment && availableEquipment.length > 0) {
+    const equipped = pool.filter((d) =>
+      d.equipment.every((e) => availableEquipment.includes(e)),
+    );
+    // Use equipment-filtered pool if it gives at least 3; otherwise fall back to full pool
+    const source = equipped.length >= 3 ? equipped : pool;
+    // Shuffle for variety then return first 3
+    return shuffle(source).slice(0, 3);
+  }
+
+  return shuffle(pool).slice(0, 3);
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
 }

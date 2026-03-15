@@ -23,13 +23,30 @@ export type Equipment =
 // 'personal' = "For Me / My Group", 'trainer' = "Trainer Plan"
 export type SessionType = 'personal' | 'trainer';
 export type DiagramType =
-  | 'rondo'
-  | 'passing-pattern'
-  | 'small-sided'
-  | 'dribbling'
-  | 'finishing'
-  | 'fitness'
-  | 'technical';
+  | 'rondo-4v2'
+  | 'rondo-5v2'
+  | 'possession-endzone'
+  | 'possession-zones'
+  | 'passing-triangle'
+  | 'passing-diagonal'
+  | 'passing-overlap'
+  | 'finishing-central'
+  | 'finishing-cross'
+  | 'finishing-2v1'
+  | 'finishing-cutback'
+  | 'first-touch-gates'
+  | 'first-touch-rebounder'
+  | 'first-touch-serve'
+  | 'close-control-box'
+  | 'dribbling-weave'
+  | 'dribbling-1v1'
+  | 'dribbling-poles'
+  | 'long-pass-switch'
+  | 'long-pass-diagonal'
+  | 'small-sided-3v3'
+  | 'small-sided-4v4'
+  | 'fitness-shuttle'
+  | 'fitness-agility';
 export type SessionSection = 'warmup' | 'technical' | 'main' | 'game' | 'cooldown';
 
 export interface Drill {
@@ -38,6 +55,10 @@ export interface Drill {
   category: TrainingFocus;
   duration: number; // suggested minutes (used in library display)
   description: string;
+  setup: string;        // how to arrange the space and equipment
+  sequence: string;     // numbered steps of the drill
+  repScheme: string;    // reps × duration structure
+  progression: string;  // how to make it harder
   playersMin: number;
   playersMax: number;
   setupSize: string;

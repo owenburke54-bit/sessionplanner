@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { drills } from '@/data/drills';
 import { Drill, TrainingFocus } from '@/types';
 import FieldDiagram from './FieldDiagram';
+import DiagramViewer from './DiagramViewer';
 import { FOCUS_ICONS } from './Icons';
 
 // ── Colour + label maps ─────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ const ALL_CATEGORIES: TrainingFocus[] = [
 
 // ── Drill detail sheet ───────────────────────────────────────────────────────
 function DrillDetailSheet({ drill, onClose }: { drill: Drill; onClose: () => void }) {
+  const [showDiagram, setShowDiagram] = useState(false);
   const meta = CATEGORY_META[drill.category];
   const FocusIcon = FOCUS_ICONS[drill.category];
   const equipLabels = drill.equipment.map((e) =>
@@ -32,6 +34,7 @@ function DrillDetailSheet({ drill, onClose }: { drill: Drill; onClose: () => voi
   );
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-end" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
       <div
@@ -43,8 +46,19 @@ function DrillDetailSheet({ drill, onClose }: { drill: Drill; onClose: () => voi
           <div className="w-10 h-1 bg-[#1a2340] rounded-full" />
         </div>
 
-        {/* Diagram */}
-        <FieldDiagram type={drill.diagramType} className="mx-5 mt-4 h-44 rounded-2xl" />
+        {/* Diagram — tappable */}
+        <button
+          onClick={(e) => { e.stopPropagation(); setShowDiagram(true); }}
+          className="relative w-full mt-4 px-5 block"
+        >
+          <FieldDiagram type={drill.diagramType} className="w-full h-44 rounded-2xl" />
+          <div className="absolute bottom-3 right-7 bg-black/50 rounded-lg px-2 py-1 flex items-center gap-1">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+              <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+            </svg>
+            <span className="text-[9px] text-white/70">expand</span>
+          </div>
+        </button>
 
         {/* Content */}
         <div className="px-5 pt-4 pb-10 overflow-y-auto max-h-[55vh]">
@@ -109,10 +123,36 @@ function DrillDetailSheet({ drill, onClose }: { drill: Drill; onClose: () => voi
             </div>
           </div>
 
+          {/* Setup + Sequence */}
+          {drill.setup && (
+            <div className="mb-4 bg-[#111827] border border-[#1a2340] rounded-xl p-3">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Setup</p>
+              <p className="text-xs text-slate-300 leading-relaxed">{drill.setup}</p>
+            </div>
+          )}
+          {drill.sequence && (
+            <div className="mb-4 bg-[#111827] border border-[#1a2340] rounded-xl p-3">
+              <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1.5">Sequence</p>
+              <p className="text-xs text-slate-300 leading-relaxed whitespace-pre-line">{drill.sequence}</p>
+            </div>
+          )}
+          {drill.repScheme && (
+            <div className="mb-4 bg-[#111827] border border-[#1a2340] rounded-xl p-3">
+              <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-wider mb-1">Reps / Duration</p>
+              <p className="text-xs text-slate-300 leading-relaxed">{drill.repScheme}</p>
+            </div>
+          )}
+          {drill.progression && (
+            <div className="mb-4 bg-[#111827] border border-[#1a2340] rounded-xl p-3">
+              <p className="text-[10px] font-semibold text-emerald-400 uppercase tracking-wider mb-1">Progression</p>
+              <p className="text-xs text-slate-300 leading-relaxed">{drill.progression}</p>
+            </div>
+          )}
+
           {/* Coaching tip */}
           <div className="bg-amber-950/30 border border-amber-800/30 rounded-2xl p-4">
             <p className="text-[11px] font-bold text-amber-400 uppercase tracking-wider mb-1.5">
-              💡 Coaching Tip
+              Coaching Tip
             </p>
             <p className="text-sm text-amber-200/80 leading-relaxed">{drill.coachingTip}</p>
           </div>
@@ -129,6 +169,15 @@ function DrillDetailSheet({ drill, onClose }: { drill: Drill; onClose: () => voi
         </button>
       </div>
     </div>
+
+    {showDiagram && (
+      <DiagramViewer
+        type={drill.diagramType}
+        title={drill.title}
+        onClose={() => setShowDiagram(false)}
+      />
+    )}
+    </>
   );
 }
 

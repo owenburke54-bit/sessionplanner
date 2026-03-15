@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Session, SessionDrill, SessionFormData, Drill } from '@/types';
+import { Session, SessionDrill, Drill } from '@/types';
 import FieldDiagram from './FieldDiagram';
+import DiagramViewer from './DiagramViewer';
 import SwapDrillSheet from './SwapDrillSheet';
 import { alternativesFor } from '@/lib/sessionGenerator';
 
@@ -82,6 +83,7 @@ function DrillCard({
   onRemove: (id: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [showDiagram, setShowDiagram] = useState(false);
   const { drill, duration, section } = sd;
   const meta = SECTION_META[section];
 
@@ -90,6 +92,7 @@ function DrillCard({
   );
 
   return (
+    <>
     <div className="bg-[#0d1224] border border-[#1a2340] rounded-2xl overflow-hidden">
       {/* Section badge */}
       <div className="flex items-center gap-2.5 px-4 pt-4">
@@ -106,7 +109,20 @@ function DrillCard({
 
       {/* Diagram + info */}
       <div className="flex gap-3 p-4">
-        <FieldDiagram type={drill.diagramType} className="w-28 h-20 shrink-0 rounded-xl" />
+        <button
+          onClick={() => setShowDiagram(true)}
+          className="relative shrink-0 w-28 h-20 rounded-xl overflow-hidden active:opacity-80 transition-opacity"
+          aria-label="Expand diagram"
+        >
+          <FieldDiagram type={drill.diagramType} className="w-full h-full" />
+          <div className="absolute inset-0 flex items-end justify-end p-1.5">
+            <div className="bg-black/50 rounded px-1 py-0.5">
+              <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
+                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
+              </svg>
+            </div>
+          </div>
+        </button>
         <div className="flex-1 min-w-0">
           <h4 className="text-sm font-bold text-white leading-tight">{drill.title}</h4>
           <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
@@ -131,10 +147,16 @@ function DrillCard({
       {expanded && (
         <div className="px-4 pb-3 space-y-3 border-t border-[#1a2340] pt-3">
           <p className="text-xs text-slate-400 leading-relaxed">{drill.description}</p>
+          {drill.repScheme && (
+            <div className="bg-[#111827] border border-[#1a2340] rounded-xl p-3">
+              <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-wider mb-1">Reps / Duration</p>
+              <p className="text-xs text-slate-300 leading-relaxed">{drill.repScheme}</p>
+            </div>
+          )}
           {drill.coachingTip && (
             <div className="bg-amber-950/30 border border-amber-800/30 rounded-xl p-3">
               <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">
-                💡 Coaching Tip
+                Coaching Tip
               </p>
               <p className="text-xs text-amber-200/80 leading-relaxed">{drill.coachingTip}</p>
             </div>
@@ -166,6 +188,15 @@ function DrillCard({
         </button>
       </div>
     </div>
+
+    {showDiagram && (
+      <DiagramViewer
+        type={drill.diagramType}
+        title={drill.title}
+        onClose={() => setShowDiagram(false)}
+      />
+    )}
+    </>
   );
 }
 
@@ -198,7 +229,7 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
   };
 
   const getAlternatives = (sd: SessionDrill) =>
-    alternativesFor(sd.drill.id, session.playerCount, session.skillLevel, session.ageGroup);
+    alternativesFor(sd.drill.id, session.playerCount, session.skillLevel, session.ageGroup, session.equipment);
 
   const focusLabel = session.focuses.map((f) => FOCUS_LABELS[f] ?? f).join(' · ');
 
