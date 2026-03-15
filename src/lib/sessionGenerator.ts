@@ -49,8 +49,12 @@ function soloEligible(drill: Drill, skillLevel: SkillLevel, ageGroup: AgeGroup):
   return drill.soloFriendly && drill.skillLevels.includes(skillLevel) && drill.ageGroups.includes(ageGroup);
 }
 
-function pickOne(candidates: Drill[], used: Set<string>): Drill | null {
-  const pool = candidates.filter((d) => !used.has(d.id));
+function pickOne(candidates: Drill[], used: Set<string>, usedFamilies?: Set<string>): Drill | null {
+  const pool = candidates.filter((d) => {
+    if (used.has(d.id)) return false;
+    if (usedFamilies && d.familyId && usedFamilies.has(d.familyId)) return false;
+    return true;
+  });
   if (!pool.length) return null;
   return pool[Math.floor(Math.random() * pool.length)];
 }
@@ -132,6 +136,7 @@ const nextId = () => `sd-${Date.now()}-${++_counter}`;
 
 export function generateSession(form: SessionFormData): Session {
   const used = new Set<string>();
+  const usedFamilies = new Set<string>();
   const times = allocateTimes(form.sessionLength);
   const focuses = form.focuses.slice(0, 3); // cap at 3
   const isSolo = form.playerCount === 1;
@@ -146,7 +151,7 @@ export function generateSession(form: SessionFormData): Session {
   ) {
     if (duration === 0) return;
 
-    let drill = pickOne(candidates, used);
+    let drill = pickOne(candidates, used, usedFamilies);
 
     // Fallback: if no candidates match, try relaxing solo constraint
     if (!drill && fallbackFocus) {
@@ -169,6 +174,7 @@ export function generateSession(form: SessionFormData): Session {
 
     if (drill) {
       used.add(drill.id);
+      if (drill.familyId) usedFamilies.add(drill.familyId);
       sessionDrills.push({ id: nextId(), drill, duration, section });
     }
   }
@@ -238,7 +244,7 @@ export function alternativesFor(
 
   const isSolo = playerCount === 1;
 
-  // Build pool: same category, compatible players/skill/age
+  // Build pool: same category, compatible players/skill/age, different family
   const pool = allDrills.filter((d) => {
     if (d.id === currentDrillId) return false;
     if (d.category !== current.category) return false;
@@ -246,6 +252,8 @@ export function alternativesFor(
     if (!d.ageGroups.includes(ageGroup)) return false;
     if (isSolo && !d.soloFriendly) return false;
     if (!isSolo && d.playersMin > playerCount) return false;
+    // Skip drills from the same family as the current drill
+    if (current.familyId && d.familyId && d.familyId === current.familyId) return false;
     return true;
   });
 

@@ -69,6 +69,7 @@ export interface Drill {
   ageGroups: AgeGroup[];
   complexity: 'low' | 'medium' | 'high';
   soloFriendly: boolean; // can be done with 1 player
+  familyId?: string; // drills sharing a familyId are variants — avoid picking two in the same session
 }
 
 export interface SessionDrill {

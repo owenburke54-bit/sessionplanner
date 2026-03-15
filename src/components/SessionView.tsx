@@ -76,16 +76,19 @@ function EmptySession({ onBuildNew }: { onBuildNew: () => void }) {
 
 // ── Drill Card ──────────────────────────────────────────────────────────────
 function DrillCard({
-  sd, onSwap, onRemove,
+  sd, onSwap, onRemove, isSolo,
 }: {
   sd: SessionDrill;
   onSwap: (sd: SessionDrill) => void;
   onRemove: (id: string) => void;
+  isSolo: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [showDiagram, setShowDiagram] = useState(false);
   const { drill, duration, section } = sd;
-  const meta = SECTION_META[section];
+  const meta = (section === 'game' && isSolo)
+    ? { label: 'Conditioning', color: '#f97316', icon: '🔁' }
+    : SECTION_META[section];
 
   const equipLabels = drill.equipment.map((e) =>
     e.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
@@ -286,7 +289,7 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
             </div>
           ) : (
             session.drills.map((sd) => (
-              <DrillCard key={sd.id} sd={sd} onSwap={setSwapping} onRemove={handleRemove} />
+              <DrillCard key={sd.id} sd={sd} onSwap={setSwapping} onRemove={handleRemove} isSolo={session.playerCount === 1} />
             ))
           )}
         </div>
