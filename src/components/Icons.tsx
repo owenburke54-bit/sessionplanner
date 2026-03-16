@@ -1,6 +1,6 @@
 'use client';
 
-import { TrainingFocus, Equipment } from '@/types';
+import { SessionFocus, Equipment } from '@/types';
 
 type SVGProps = { className?: string };
 
@@ -71,7 +71,24 @@ const FitnessIcon = ({ className }: SVGProps) => (
   </svg>
 );
 
-export const FOCUS_ICONS: Record<TrainingFocus, (props: SVGProps) => JSX.Element> = {
+const JugglingIcon = ({ className }: SVGProps) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="10" cy="4.5" r="2.5" />
+    <path d="M10 7v3" strokeDasharray="1.5 1.5" />
+    <path d="M4 18Q7 13 10 13Q13 13 16 18" />
+    <path d="M7 18l-1 2.5M13 18l1 2.5" strokeWidth="1.5" />
+  </svg>
+);
+
+const GoalkeeperIcon = ({ className }: SVGProps) => (
+  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <rect x="2" y="5" width="16" height="10" rx="1" />
+    <circle cx="10" cy="10" r="2" />
+    <path d="M6.5 10h1.5M12 10h1.5" />
+  </svg>
+);
+
+export const FOCUS_ICONS: Record<SessionFocus, (props: SVGProps) => JSX.Element> = {
   possession: PossessionIcon,
   finishing: FinishingIcon,
   'first-touch': FirstTouchIcon,
@@ -80,6 +97,8 @@ export const FOCUS_ICONS: Record<TrainingFocus, (props: SVGProps) => JSX.Element
   'long-passing': LongPassingIcon,
   'small-sided': SmallSidedIcon,
   fitness: FitnessIcon,
+  juggling: JugglingIcon,
+  goalkeeper: GoalkeeperIcon,
 };
 
 // ── Equipment Icons ───────────────────────────────────────────────────────────

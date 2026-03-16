@@ -22,6 +22,69 @@ export type Equipment =
   | 'agility-ladder';
 // 'personal' = "For Me / My Group", 'trainer' = "Trainer Plan"
 export type SessionType = 'personal' | 'trainer';
+
+// ── Block-based session types ──────────────────────────────────────────────
+export type BlockType =
+  | 'activation'
+  | 'warm-up'
+  | 'fitness'
+  | 'cooldown'
+  | 'ball-mastery'
+  | 'short-passing'
+  | 'long-passing'
+  | 'passing-patterns'
+  | 'dribbling'
+  | 'finishing'
+  | 'goalkeeper'
+  | 'possession'
+  | 'small-sided'
+  | 'juggling';
+
+export type SessionFocus =
+  | 'possession'
+  | 'finishing'
+  | 'first-touch'
+  | 'close-control'
+  | 'dribbling'
+  | 'long-passing'
+  | 'small-sided'
+  | 'fitness'
+  | 'juggling'
+  | 'goalkeeper';
+
+export interface SessionBlock {
+  id: string;
+  blockType: BlockType;
+  title: string;
+  duration: number;
+  purpose: string;
+  notes: string;
+}
+
+export interface PlannedSession {
+  id: string;
+  name: string;
+  createdAt: string;
+  ageGroup: AgeGroup;
+  skillLevel: SkillLevel;
+  playerCount: number;
+  sessionLength: SessionLength;
+  focuses: SessionFocus[];
+  equipment: Equipment[];
+  sessionType: SessionType;
+  blocks: SessionBlock[];
+  totalTime: number;
+}
+
+export interface SessionPlanFormData {
+  ageGroup: AgeGroup;
+  skillLevel: SkillLevel;
+  playerCount: number;
+  sessionLength: SessionLength;
+  focuses: SessionFocus[];
+  equipment: Equipment[];
+  sessionType: SessionType;
+}
 export type DiagramType =
   | 'rondo-4v2'
   | 'rondo-5v2'

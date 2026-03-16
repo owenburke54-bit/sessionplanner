@@ -4,30 +4,37 @@ import { useState, useCallback } from 'react';
 import HomeScreen from '@/components/HomeScreen';
 import SessionBuilder from '@/components/SessionBuilder';
 import SessionView from '@/components/SessionView';
-import DrillLibrary from '@/components/DrillLibrary';
+import SavedSessions from '@/components/SavedSessions';
 import BottomNav from '@/components/BottomNav';
-import { Session, SessionFormData, SessionType } from '@/types';
-import { generateSession } from '@/lib/sessionGenerator';
+import { PlannedSession, SessionPlanFormData, SessionType } from '@/types';
+import { generatePlannedSession } from '@/lib/blockSessionGenerator';
+import { useSavedSessions } from '@/hooks/useSavedSessions';
 
-export type Tab = 'home' | 'build' | 'drills' | 'session';
+export type Tab = 'home' | 'build' | 'saved' | 'session';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<PlannedSession | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [initialSessionType, setInitialSessionType] = useState<SessionType>('personal');
+  const { save } = useSavedSessions();
 
   const handleStartBuild = useCallback((type: SessionType) => {
     setInitialSessionType(type);
     setActiveTab('build');
   }, []);
 
-  const handleGenerate = useCallback(async (formData: SessionFormData) => {
+  const handleGenerate = useCallback(async (formData: SessionPlanFormData) => {
     setIsGenerating(true);
-    await new Promise((r) => setTimeout(r, 1400));
-    const generated = generateSession(formData);
+    await new Promise((r) => setTimeout(r, 1000));
+    const generated = generatePlannedSession(formData);
     setSession(generated);
     setIsGenerating(false);
+    setActiveTab('session');
+  }, []);
+
+  const handleLoadSaved = useCallback((loaded: PlannedSession) => {
+    setSession(loaded);
     setActiveTab('session');
   }, []);
 
@@ -38,7 +45,7 @@ export default function App() {
           {activeTab === 'home' && (
             <HomeScreen
               onStartBuild={handleStartBuild}
-              onBrowseDrills={() => setActiveTab('drills')}
+              onViewSaved={() => setActiveTab('saved')}
             />
           )}
           {activeTab === 'build' && (
@@ -48,12 +55,15 @@ export default function App() {
               isGenerating={isGenerating}
             />
           )}
-          {activeTab === 'drills' && <DrillLibrary />}
+          {activeTab === 'saved' && (
+            <SavedSessions onLoad={handleLoadSaved} />
+          )}
           {activeTab === 'session' && (
             <SessionView
               session={session}
               onUpdate={setSession}
               onBuildNew={() => setActiveTab('build')}
+              onSave={save}
             />
           )}
         </main>

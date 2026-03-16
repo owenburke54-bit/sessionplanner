@@ -1,26 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Session, SessionDrill, Drill } from '@/types';
-import FieldDiagram from './FieldDiagram';
-import DiagramViewer from './DiagramViewer';
-import SwapDrillSheet from './SwapDrillSheet';
-import { alternativesFor } from '@/lib/sessionGenerator';
+import { PlannedSession, SessionBlock, BlockType } from '@/types';
+import { BLOCK_META } from '@/lib/blockSessionGenerator';
+import SessionBlockCard from './SessionBlockCard';
+import BlockEditorSheet from './BlockEditorSheet';
+import AddBlockSheet from './AddBlockSheet';
 
 interface Props {
-  session: Session | null;
-  onUpdate: (session: Session) => void;
+  session: PlannedSession | null;
+  onUpdate: (session: PlannedSession) => void;
   onBuildNew: () => void;
+  onSave: (session: PlannedSession) => void;
 }
-
-// ── Label maps ──────────────────────────────────────────────────────────────
-const SECTION_META: Record<string, { label: string; color: string; icon: string }> = {
-  warmup:    { label: 'Warm-Up',      color: '#f59e0b', icon: '🔥' },
-  technical: { label: 'Technical',    color: '#3b82f6', icon: '⚙️' },
-  main:      { label: 'Main Drill',   color: '#10b981', icon: '🎯' },
-  game:      { label: 'Applied Game', color: '#ef4444', icon: '⚽' },
-  cooldown:  { label: 'Cool-Down',    color: '#a855f7', icon: '🧘' },
-};
 
 const FOCUS_LABELS: Record<string, string> = {
   'possession':    'Possession',
@@ -31,6 +23,8 @@ const FOCUS_LABELS: Record<string, string> = {
   'long-passing':  'Long Passing',
   'small-sided':   'Small Sided',
   'fitness':       'Fitness',
+  'juggling':      'Juggling',
+  'goalkeeper':    'Goalkeeper',
 };
 
 const AGE_LABELS: Record<string, string> = {
@@ -41,19 +35,6 @@ const AGE_LABELS: Record<string, string> = {
   'college-adult': 'Adult',
 };
 
-const FIELD_LABELS: Record<string, string> = {
-  'small-box':  'Small Box',
-  'small-half': 'Small Half',
-  'full-half':  'Full Half',
-  'full-field': 'Full Field',
-};
-
-const SESSION_TYPE_LABELS: Record<string, string> = {
-  personal: 'My Group',
-  trainer:  'Trainer Plan',
-};
-
-// ── Empty state ─────────────────────────────────────────────────────────────
 function EmptySession({ onBuildNew }: { onBuildNew: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-140px)] px-8 text-center">
@@ -74,167 +55,58 @@ function EmptySession({ onBuildNew }: { onBuildNew: () => void }) {
   );
 }
 
-// ── Drill Card ──────────────────────────────────────────────────────────────
-function DrillCard({
-  sd, onSwap, onRemove, isSolo,
-}: {
-  sd: SessionDrill;
-  onSwap: (sd: SessionDrill) => void;
-  onRemove: (id: string) => void;
-  isSolo: boolean;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const [showDiagram, setShowDiagram] = useState(false);
-  const { drill, duration, section } = sd;
-  const meta = (section === 'game' && isSolo)
-    ? { label: 'Conditioning', color: '#f97316', icon: '🔁' }
-    : SECTION_META[section];
-
-  const equipLabels = drill.equipment.map((e) =>
-    e.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-  );
-
-  return (
-    <>
-    <div className="bg-[#0d1224] border border-[#1a2340] rounded-2xl overflow-hidden">
-      {/* Section badge */}
-      <div className="flex items-center gap-2.5 px-4 pt-4">
-        <span
-          className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
-          style={{ color: meta.color, backgroundColor: `${meta.color}15` }}
-        >
-          {meta.icon} {meta.label}
-        </span>
-        <span className="ml-auto text-xs font-bold text-white tabular-nums">
-          {duration} min
-        </span>
-      </div>
-
-      {/* Diagram + info */}
-      <div className="flex gap-3 p-4">
-        <button
-          onClick={() => setShowDiagram(true)}
-          className="relative shrink-0 w-28 h-20 rounded-xl overflow-hidden active:opacity-80 transition-opacity"
-          aria-label="Expand diagram"
-        >
-          <FieldDiagram type={drill.diagramType} className="w-full h-full" />
-          <div className="absolute inset-0 flex items-end justify-end p-1.5">
-            <div className="bg-black/50 rounded px-1 py-0.5">
-              <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
-                <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
-              </svg>
-            </div>
-          </div>
-        </button>
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-bold text-white leading-tight">{drill.title}</h4>
-          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-            <span className="text-[10px] text-slate-500 bg-[#1a2340] px-2 py-0.5 rounded-full">
-              {drill.playersMin}–{drill.playersMax}p
-            </span>
-            <span className="text-[10px] text-slate-500 bg-[#1a2340] px-2 py-0.5 rounded-full">
-              {drill.setupSize}
-            </span>
-          </div>
-          <div className="flex flex-wrap gap-1 mt-1.5">
-            {equipLabels.slice(0, 3).map((e) => (
-              <span key={e} className="text-[10px] text-emerald-400/70 bg-emerald-900/20 px-1.5 py-0.5 rounded">
-                {e}
-              </span>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Expandable detail */}
-      {expanded && (
-        <div className="px-4 pb-3 space-y-3 border-t border-[#1a2340] pt-3">
-          <p className="text-xs text-slate-400 leading-relaxed">{drill.description}</p>
-          {drill.repScheme && (
-            <div className="bg-[#111827] border border-[#1a2340] rounded-xl p-3">
-              <p className="text-[10px] font-semibold text-blue-400 uppercase tracking-wider mb-1">Reps / Duration</p>
-              <p className="text-xs text-slate-300 leading-relaxed">{drill.repScheme}</p>
-            </div>
-          )}
-          {drill.coachingTip && (
-            <div className="bg-amber-950/30 border border-amber-800/30 rounded-xl p-3">
-              <p className="text-[10px] font-semibold text-amber-400 uppercase tracking-wider mb-1">
-                Coaching Tip
-              </p>
-              <p className="text-xs text-amber-200/80 leading-relaxed">{drill.coachingTip}</p>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Actions */}
-      <div className="flex border-t border-[#1a2340]">
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="flex-1 py-3 text-xs font-medium text-slate-400 active:bg-white/5 transition-colors"
-        >
-          {expanded ? 'Less' : 'Details'}
-        </button>
-        <div className="w-px bg-[#1a2340]" />
-        <button
-          onClick={() => onSwap(sd)}
-          className="flex-1 py-3 text-xs font-medium text-blue-400 active:bg-white/5 transition-colors"
-        >
-          Swap
-        </button>
-        <div className="w-px bg-[#1a2340]" />
-        <button
-          onClick={() => onRemove(sd.id)}
-          className="flex-1 py-3 text-xs font-medium text-red-400/70 active:bg-white/5 transition-colors"
-        >
-          Remove
-        </button>
-      </div>
-    </div>
-
-    {showDiagram && (
-      <DiagramViewer
-        type={drill.diagramType}
-        title={drill.title}
-        onClose={() => setShowDiagram(false)}
-      />
-    )}
-    </>
-  );
+let _blockCounter = 0;
+function nextBlockId(): string {
+  return `sb-${Date.now()}-${++_blockCounter}`;
 }
 
-// ── Main component ──────────────────────────────────────────────────────────
-export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
-  const [swapping, setSwapping] = useState<SessionDrill | null>(null);
+export default function SessionView({ session, onUpdate, onBuildNew, onSave }: Props) {
+  const [editing, setEditing] = useState<SessionBlock | null>(null);
+  const [addingBlock, setAddingBlock] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   if (!session) return <EmptySession onBuildNew={onBuildNew} />;
 
-  const totalTime = session.drills.reduce((s, d) => s + d.duration, 0);
+  const totalTime = session.blocks.reduce((s, b) => s + b.duration, 0);
+  const focusLabel = session.focuses.map((f) => FOCUS_LABELS[f] ?? f).join(' · ');
+
+  const updateBlocks = (blocks: SessionBlock[]) => {
+    onUpdate({ ...session, blocks, totalTime: blocks.reduce((s, b) => s + b.duration, 0) });
+    setSaved(false);
+  };
+
+  const handleEdit = (updated: SessionBlock) => {
+    updateBlocks(session.blocks.map((b) => (b.id === updated.id ? updated : b)));
+  };
+
+  const handleMove = (index: number, direction: 'up' | 'down') => {
+    const blocks = [...session.blocks];
+    const swapIndex = direction === 'up' ? index - 1 : index + 1;
+    [blocks[index], blocks[swapIndex]] = [blocks[swapIndex], blocks[index]];
+    updateBlocks(blocks);
+  };
 
   const handleRemove = (id: string) => {
-    const remaining = session.drills.filter((d) => d.id !== id);
-    onUpdate({
-      ...session,
-      drills: remaining,
-      totalTime: remaining.reduce((s, d) => s + d.duration, 0),
-    });
+    updateBlocks(session.blocks.filter((b) => b.id !== id));
   };
 
-  const handleSwap = (replacement: Drill) => {
-    if (!swapping) return;
-    onUpdate({
-      ...session,
-      drills: session.drills.map((d) =>
-        d.id === swapping.id ? { ...d, drill: replacement } : d,
-      ),
-    });
-    setSwapping(null);
+  const handleAddBlock = (type: BlockType) => {
+    const meta = BLOCK_META[type];
+    const newBlock: SessionBlock = {
+      id: nextBlockId(),
+      blockType: type,
+      title: meta.defaultTitle,
+      duration: 10,
+      purpose: meta.purpose,
+      notes: '',
+    };
+    updateBlocks([...session.blocks, newBlock]);
   };
 
-  const getAlternatives = (sd: SessionDrill) =>
-    alternativesFor(sd.drill.id, session.playerCount, session.skillLevel, session.ageGroup, session.equipment);
-
-  const focusLabel = session.focuses.map((f) => FOCUS_LABELS[f] ?? f).join(' · ');
+  const handleSave = () => {
+    onSave({ ...session, totalTime });
+    setSaved(true);
+  };
 
   return (
     <>
@@ -242,9 +114,9 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
         {/* Header */}
         <div className="sticky top-0 z-10 bg-[#080c18]/95 backdrop-blur-xl border-b border-[#1a2340]">
           <div className="px-5 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-bold text-white">Your Session</h2>
-              <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[220px]">
+            <div className="flex-1 min-w-0 mr-3">
+              <h2 className="text-lg font-bold text-white truncate">{session.name}</h2>
+              <p className="text-xs text-slate-500 mt-0.5 truncate">
                 {focusLabel} · {AGE_LABELS[session.ageGroup]}
               </p>
             </div>
@@ -252,7 +124,7 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
               onClick={onBuildNew}
               className="px-3.5 py-2 text-xs font-semibold text-blue-400 bg-blue-600/10 border border-blue-600/20 rounded-xl active:bg-blue-600/20 transition-colors shrink-0"
             >
-              New Session
+              New
             </button>
           </div>
 
@@ -261,11 +133,8 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
             {[
               { label: 'Duration', value: `${totalTime} min` },
               { label: 'Players',  value: String(session.playerCount) },
-              { label: 'Field',    value: FIELD_LABELS[session.fieldSize] },
-              {
-                label: 'Type',
-                value: SESSION_TYPE_LABELS[session.sessionType] ?? session.sessionType,
-              },
+              { label: 'Blocks',   value: String(session.blocks.length) },
+              { label: 'Level',    value: session.skillLevel.charAt(0).toUpperCase() + session.skillLevel.slice(1) },
             ].map(({ label, value }) => (
               <div key={label} className="flex-1 text-center py-3 border-r border-[#1a2340] last:border-r-0">
                 <p className="text-xs font-bold text-white">{value}</p>
@@ -275,27 +144,39 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
           </div>
         </div>
 
-        {/* Drill cards */}
+        {/* Block cards */}
         <div className="px-5 pt-5 space-y-3">
-          {session.drills.length === 0 ? (
+          {session.blocks.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-slate-500 text-sm">All drills removed.</p>
-              <button
-                onClick={onBuildNew}
-                className="mt-4 px-5 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-xl"
-              >
-                Rebuild Session
-              </button>
+              <p className="text-slate-500 text-sm">No blocks yet. Add some below.</p>
             </div>
           ) : (
-            session.drills.map((sd) => (
-              <DrillCard key={sd.id} sd={sd} onSwap={setSwapping} onRemove={handleRemove} isSolo={session.playerCount === 1} />
+            session.blocks.map((block, i) => (
+              <SessionBlockCard
+                key={block.id}
+                block={block}
+                index={i}
+                total={session.blocks.length}
+                onEdit={setEditing}
+                onMove={handleMove}
+                onRemove={handleRemove}
+              />
             ))
           )}
         </div>
 
-        {/* Time summary */}
-        {session.drills.length > 0 && (
+        {/* Add block */}
+        <div className="px-5 mt-3">
+          <button
+            onClick={() => setAddingBlock(true)}
+            className="w-full py-3.5 border-2 border-dashed border-[#1a2340] rounded-2xl text-sm font-medium text-slate-500 hover:border-blue-600/30 hover:text-blue-400 transition-colors active:bg-white/5"
+          >
+            + Add Block
+          </button>
+        </div>
+
+        {/* Timeline summary */}
+        {session.blocks.length > 0 && (
           <div className="mx-5 mt-4 p-4 bg-[#0d1224] border border-[#1a2340] rounded-2xl">
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs text-slate-500 font-medium">Total session time</span>
@@ -303,12 +184,12 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
             </div>
             {/* Timeline bar */}
             <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
-              {session.drills.map((sd) => (
+              {session.blocks.map((b) => (
                 <div
-                  key={sd.id}
+                  key={b.id}
                   style={{
-                    flex: sd.duration,
-                    backgroundColor: SECTION_META[sd.section]?.color ?? '#3b82f6',
+                    flex: b.duration,
+                    backgroundColor: BLOCK_META[b.blockType]?.color ?? '#3b82f6',
                     opacity: 0.7,
                   }}
                 />
@@ -316,29 +197,48 @@ export default function SessionView({ session, onUpdate, onBuildNew }: Props) {
             </div>
             {/* Legend */}
             <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2.5">
-              {session.drills.map((sd) => (
-                <div key={sd.id} className="flex items-center gap-1">
+              {session.blocks.map((b) => (
+                <div key={b.id} className="flex items-center gap-1">
                   <div
                     className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: SECTION_META[sd.section]?.color ?? '#3b82f6' }}
+                    style={{ backgroundColor: BLOCK_META[b.blockType]?.color ?? '#3b82f6' }}
                   />
                   <span className="text-[10px] text-slate-500">
-                    {SECTION_META[sd.section]?.label} ({sd.duration}m)
+                    {b.title} ({b.duration}m)
                   </span>
                 </div>
               ))}
             </div>
           </div>
         )}
+
+        {/* Save button */}
+        <div className="px-5 mt-4">
+          <button
+            onClick={handleSave}
+            className={`w-full py-4 rounded-2xl text-sm font-semibold transition-all active:scale-[0.98] ${
+              saved
+                ? 'bg-emerald-600/20 border border-emerald-600/30 text-emerald-400'
+                : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20'
+            }`}
+          >
+            {saved ? '✓ Session Saved' : 'Save Session'}
+          </button>
+        </div>
       </div>
 
-      {/* Swap sheet */}
-      {swapping && (
-        <SwapDrillSheet
-          current={swapping}
-          alternatives={getAlternatives(swapping)}
-          onSwap={handleSwap}
-          onClose={() => setSwapping(null)}
+      {editing && (
+        <BlockEditorSheet
+          block={editing}
+          onSave={handleEdit}
+          onClose={() => setEditing(null)}
+        />
+      )}
+
+      {addingBlock && (
+        <AddBlockSheet
+          onAdd={handleAddBlock}
+          onClose={() => setAddingBlock(false)}
         />
       )}
     </>

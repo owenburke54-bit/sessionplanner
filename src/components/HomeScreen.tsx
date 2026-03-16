@@ -5,7 +5,7 @@ import { SessionType } from '@/types';
 
 interface Props {
   onStartBuild: (type: SessionType) => void;
-  onBrowseDrills: () => void;
+  onViewSaved: () => void;
 }
 
 const sessionTypeOptions: {
@@ -40,7 +40,7 @@ const sessionTypeOptions: {
   },
 ];
 
-export default function HomeScreen({ onStartBuild, onBrowseDrills }: Props) {
+export default function HomeScreen({ onStartBuild, onViewSaved }: Props) {
   const [selectedType, setSelectedType] = useState<SessionType>('personal');
 
   return (
@@ -148,10 +148,10 @@ export default function HomeScreen({ onStartBuild, onBrowseDrills }: Props) {
 
         {/* Secondary CTA */}
         <button
-          onClick={onBrowseDrills}
+          onClick={onViewSaved}
           className="w-full py-3 text-slate-400 hover:text-slate-200 font-medium text-sm transition-colors"
         >
-          Browse Drill Library →
+          View Saved Sessions →
         </button>
       </div>
 
@@ -159,8 +159,8 @@ export default function HomeScreen({ onStartBuild, onBrowseDrills }: Props) {
       <div className="relative px-6 pb-8">
         <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Drills', value: '65+', accent: 'text-blue-400' },
-            { label: 'Focus Areas', value: '8', accent: 'text-emerald-400' },
+            { label: 'Block Types', value: '14', accent: 'text-blue-400' },
+            { label: 'Focus Areas', value: '10', accent: 'text-emerald-400' },
             { label: 'Age Groups', value: '5', accent: 'text-blue-400' },
           ].map(({ label, value, accent }) => (
             <div

@@ -4,18 +4,17 @@ import { useState } from 'react';
 import {
   AgeGroup,
   Equipment,
-  FieldSize,
-  SessionFormData,
+  SessionPlanFormData,
   SessionLength,
   SessionType,
   SkillLevel,
-  TrainingFocus,
+  SessionFocus,
 } from '@/types';
 import { FOCUS_ICONS, EQUIP_ICONS } from './Icons';
 
 interface Props {
   initialSessionType: SessionType;
-  onGenerate: (data: SessionFormData) => void;
+  onGenerate: (data: SessionPlanFormData) => void;
   isGenerating: boolean;
 }
 
@@ -34,13 +33,6 @@ const SKILL_LEVELS: { value: SkillLevel; label: string; desc: string }[] = [
   { value: 'advanced',     label: 'Advanced',     desc: 'High performance' },
 ];
 
-const FIELD_SIZES: { value: FieldSize; label: string; sub: string }[] = [
-  { value: 'small-box',  label: 'Small Box',   sub: '10×10 yd' },
-  { value: 'small-half', label: 'Small Half',  sub: '30×20 yd' },
-  { value: 'full-half',  label: 'Full Half',   sub: '50×35 yd' },
-  { value: 'full-field', label: 'Full Field',  sub: '100×70 yd' },
-];
-
 const SESSION_LENGTHS: { value: SessionLength; label: string }[] = [
   { value: 30, label: '30m' },
   { value: 45, label: '45m' },
@@ -49,7 +41,7 @@ const SESSION_LENGTHS: { value: SessionLength; label: string }[] = [
   { value: 90, label: '90m' },
 ];
 
-const FOCUS_OPTIONS: { value: TrainingFocus; label: string; color: string }[] = [
+const FOCUS_OPTIONS: { value: SessionFocus; label: string; color: string }[] = [
   { value: 'possession',    label: 'Possession',    color: '#3b82f6' },
   { value: 'finishing',     label: 'Finishing',     color: '#ef4444' },
   { value: 'first-touch',   label: 'First Touch',   color: '#a855f7' },
@@ -58,6 +50,8 @@ const FOCUS_OPTIONS: { value: TrainingFocus; label: string; color: string }[] = 
   { value: 'long-passing',  label: 'Long Passing',  color: '#22c55e' },
   { value: 'small-sided',   label: 'Small Sided',   color: '#ec4899' },
   { value: 'fitness',       label: 'Fitness',       color: '#f97316' },
+  { value: 'juggling',      label: 'Juggling',      color: '#ec4899' },
+  { value: 'goalkeeper',    label: 'Goalkeeper',    color: '#8b5cf6' },
 ];
 
 const EQUIPMENT_OPTIONS: { value: Equipment; label: string }[] = [
@@ -91,13 +85,12 @@ export default function SessionBuilder({ initialSessionType, onGenerate, isGener
   const [ageGroup,     setAgeGroup]     = useState<AgeGroup>('college-adult');
   const [skillLevel,   setSkillLevel]   = useState<SkillLevel>('intermediate');
   const [sessionLength,setSessionLength]= useState<SessionLength>(60);
-  const [fieldSize,    setFieldSize]    = useState<FieldSize>('small-half');
-  const [focuses,      setFocuses]      = useState<TrainingFocus[]>(['possession']);
+  const [focuses,      setFocuses]      = useState<SessionFocus[]>(['possession']);
   const [equipment,    setEquipment]    = useState<Equipment[]>(['balls', 'cones']);
 
   const MAX_FOCUSES = 3;
 
-  const toggleFocus = (value: TrainingFocus) => {
+  const toggleFocus = (value: SessionFocus) => {
     setFocuses((prev) => {
       if (prev.includes(value)) {
         if (prev.length === 1) return prev; // keep at least one
@@ -121,7 +114,6 @@ export default function SessionBuilder({ initialSessionType, onGenerate, isGener
       ageGroup,
       skillLevel,
       sessionLength,
-      fieldSize,
       focuses,
       equipment,
     });
@@ -274,33 +266,7 @@ export default function SessionBuilder({ initialSessionType, onGenerate, isGener
           </div>
         </div>
 
-        {/* 6. Field Size */}
-        <div>
-          <SectionLabel>Field size</SectionLabel>
-          <div className="grid grid-cols-2 gap-2.5">
-            {FIELD_SIZES.map(({ value, label, sub }) => (
-              <button
-                key={value}
-                onClick={() => setFieldSize(value)}
-                className={`
-                  flex flex-col items-start p-4 rounded-2xl border transition-all duration-150
-                  ${fieldSize === value
-                    ? 'bg-blue-600/15 border-blue-500/60'
-                    : 'bg-[#0d1224] border-[#1a2340] active:bg-white/5'}
-                `}
-              >
-                <span className={`text-sm font-semibold ${fieldSize === value ? 'text-white' : 'text-slate-300'}`}>
-                  {label}
-                </span>
-                <span className={`text-[11px] mt-0.5 ${fieldSize === value ? 'text-blue-300' : 'text-slate-500'}`}>
-                  {sub}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 7. Training Focus — multi-select */}
+        {/* 6. Training Focus — multi-select */}
         <div>
           <SectionLabel hint={`${focuses.length}/${MAX_FOCUSES} selected`}>
             Training focus
@@ -358,7 +324,7 @@ export default function SessionBuilder({ initialSessionType, onGenerate, isGener
           </div>
         </div>
 
-        {/* 8. Equipment */}
+        {/* 7. Equipment */}
         <div>
           <SectionLabel>Equipment available</SectionLabel>
           <div className="grid grid-cols-2 gap-2.5">

@@ -57,13 +57,16 @@ const BuildIcon = ({ filled }: { filled: boolean }) => (
   </svg>
 );
 
-const DrillsIcon = ({ filled }: { filled: boolean }) => (
+const SavedIcon = ({ filled }: { filled: boolean }) => (
   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
     <path
-      d="M4 6h16M4 10h16M4 14h10M4 18h7"
+      d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"
       stroke="currentColor"
       strokeWidth={filled ? '2' : '1.6'}
       strokeLinecap="round"
+      strokeLinejoin="round"
+      fill={filled ? 'currentColor' : 'none'}
+      fillOpacity={filled ? 0.15 : 0}
     />
   </svg>
 );
@@ -93,14 +96,14 @@ const SessionIcon = ({ filled }: { filled: boolean }) => (
 const tabs: { id: Tab; label: string }[] = [
   { id: 'home', label: 'Home' },
   { id: 'build', label: 'Build' },
-  { id: 'drills', label: 'Drills' },
+  { id: 'saved', label: 'Saved' },
   { id: 'session', label: 'Session' },
 ];
 
 function TabIcon({ id, filled }: { id: Tab; filled: boolean }) {
   if (id === 'home') return <HomeIcon filled={filled} />;
   if (id === 'build') return <BuildIcon filled={filled} />;
-  if (id === 'drills') return <DrillsIcon filled={filled} />;
+  if (id === 'saved') return <SavedIcon filled={filled} />;
   return <SessionIcon filled={filled} />;
 }
 
