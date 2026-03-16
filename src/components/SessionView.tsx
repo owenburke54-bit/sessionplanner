@@ -113,16 +113,19 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
       <div className="pb-6">
         {/* Header */}
         <div className="sticky top-0 z-10 bg-[#080c18]/95 backdrop-blur-xl border-b border-[#1a2340]">
-          <div className="px-5 py-4 flex items-center justify-between">
+          <div className="px-5 pt-5 pb-4 flex items-start justify-between">
             <div className="flex-1 min-w-0 mr-3">
-              <h2 className="text-lg font-bold text-white truncate">{session.name}</h2>
-              <p className="text-xs text-slate-500 mt-0.5 truncate">
+              <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1.5">
+                Your Session
+              </p>
+              <h2 className="text-xl font-bold text-white leading-tight truncate">{session.name}</h2>
+              <p className="text-xs text-slate-500 mt-1.5 truncate">
                 {focusLabel} · {AGE_LABELS[session.ageGroup]}
               </p>
             </div>
             <button
               onClick={onBuildNew}
-              className="px-3.5 py-2 text-xs font-semibold text-blue-400 bg-blue-600/10 border border-blue-600/20 rounded-xl active:bg-blue-600/20 transition-colors shrink-0"
+              className="mt-1 px-3.5 py-2 text-xs font-semibold text-blue-400 bg-blue-600/10 border border-blue-600/20 rounded-xl active:bg-blue-600/20 transition-colors shrink-0"
             >
               New
             </button>
@@ -137,8 +140,8 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
               { label: 'Level',    value: session.skillLevel.charAt(0).toUpperCase() + session.skillLevel.slice(1) },
             ].map(({ label, value }) => (
               <div key={label} className="flex-1 text-center py-3 border-r border-[#1a2340] last:border-r-0">
-                <p className="text-xs font-bold text-white">{value}</p>
-                <p className="text-[10px] text-slate-600 mt-0.5">{label}</p>
+                <p className="text-sm font-semibold text-white">{value}</p>
+                <p className="text-[10px] text-slate-600 mt-0.5 uppercase tracking-wide">{label}</p>
               </div>
             ))}
           </div>
@@ -169,9 +172,15 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
         <div className="px-5 mt-3">
           <button
             onClick={() => setAddingBlock(true)}
-            className="w-full py-3.5 border-2 border-dashed border-[#1a2340] rounded-2xl text-sm font-medium text-slate-500 hover:border-blue-600/30 hover:text-blue-400 transition-colors active:bg-white/5"
+            className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl border-2 border-dashed border-[#1e2a45] text-slate-500 hover:border-blue-500/40 hover:text-blue-400 active:bg-white/[0.03] transition-all"
           >
-            + Add Block
+            <span className="w-5 h-5 rounded-full border border-current flex items-center justify-center shrink-0">
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                <line x1="5" y1="1" x2="5" y2="9" />
+                <line x1="1" y1="5" x2="9" y2="5" />
+              </svg>
+            </span>
+            <span className="text-sm font-medium">Add Block</span>
           </button>
         </div>
 
@@ -213,7 +222,8 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
         )}
 
         {/* Save button */}
-        <div className="px-5 mt-4">
+        <div className="px-5 mt-6 pb-2">
+          <div className="h-px bg-[#1a2340] mb-6" />
           <button
             onClick={handleSave}
             className={`w-full py-4 rounded-2xl text-sm font-semibold transition-all active:scale-[0.98] ${
