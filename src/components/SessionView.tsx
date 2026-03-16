@@ -64,6 +64,8 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
   const [editing, setEditing] = useState<SessionBlock | null>(null);
   const [addingBlock, setAddingBlock] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [showNameSheet, setShowNameSheet] = useState(false);
+  const [pendingName, setPendingName] = useState('');
 
   if (!session) return <EmptySession onBuildNew={onBuildNew} />;
 
@@ -103,9 +105,20 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
     updateBlocks([...session.blocks, newBlock]);
   };
 
-  const handleSave = () => {
-    onSave({ ...session, totalTime });
+  // Open the name sheet, pre-filling with current session name
+  const openNameSheet = () => {
+    setPendingName(session.name);
+    setShowNameSheet(true);
+  };
+
+  // Confirm: apply name, persist, close sheet
+  const handleConfirmSave = () => {
+    const finalName = pendingName.trim() || session.name;
+    const updated = { ...session, name: finalName, totalTime };
+    onUpdate(updated);
+    onSave(updated);
     setSaved(true);
+    setShowNameSheet(false);
   };
 
   return (
@@ -118,7 +131,20 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
               <p className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mb-1.5">
                 Your Session
               </p>
-              <h2 className="text-xl font-bold text-white leading-tight truncate">{session.name}</h2>
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-xl font-bold text-white leading-tight truncate">{session.name}</h2>
+                {/* Rename button — always visible so users know the name is editable */}
+                <button
+                  onClick={openNameSheet}
+                  className="shrink-0 w-6 h-6 rounded-md bg-[#1a2340] flex items-center justify-center text-slate-500 active:text-slate-300 transition-colors"
+                  aria-label="Rename session"
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </button>
+              </div>
               <p className="text-xs text-slate-500 mt-1.5 truncate">
                 {focusLabel} · {AGE_LABELS[session.ageGroup]}
               </p>
@@ -191,7 +217,6 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
               <span className="text-xs text-slate-500 font-medium">Total session time</span>
               <span className="text-base font-bold text-white">{totalTime} min</span>
             </div>
-            {/* Timeline bar */}
             <div className="flex gap-0.5 h-2 rounded-full overflow-hidden">
               {session.blocks.map((b) => (
                 <div
@@ -204,7 +229,6 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
                 />
               ))}
             </div>
-            {/* Legend */}
             <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2.5">
               {session.blocks.map((b) => (
                 <div key={b.id} className="flex items-center gap-1">
@@ -225,18 +249,19 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
         <div className="px-5 mt-6 pb-2">
           <div className="h-px bg-[#1a2340] mb-6" />
           <button
-            onClick={handleSave}
+            onClick={saved ? openNameSheet : openNameSheet}
             className={`w-full py-4 rounded-2xl text-sm font-semibold transition-all active:scale-[0.98] ${
               saved
                 ? 'bg-emerald-600/20 border border-emerald-600/30 text-emerald-400'
                 : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/20'
             }`}
           >
-            {saved ? '✓ Session Saved' : 'Save Session'}
+            {saved ? '✓ Saved — tap to rename' : 'Save Session'}
           </button>
         </div>
       </div>
 
+      {/* Block editor sheet */}
       {editing && (
         <BlockEditorSheet
           block={editing}
@@ -245,11 +270,57 @@ export default function SessionView({ session, onUpdate, onBuildNew, onSave }: P
         />
       )}
 
+      {/* Add block sheet */}
       {addingBlock && (
         <AddBlockSheet
           onAdd={handleAddBlock}
           onClose={() => setAddingBlock(false)}
         />
+      )}
+
+      {/* Name / save sheet */}
+      {showNameSheet && (
+        <div className="fixed inset-0 z-50 flex items-end" onClick={() => setShowNameSheet(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" />
+          <div
+            className="relative w-full max-w-[430px] mx-auto bg-[#0d1224] border-t border-[#1a2340] rounded-t-3xl animate-slide-up"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3">
+              <div className="w-10 h-1 bg-[#1a2340] rounded-full" />
+            </div>
+
+            <div className="px-5 pt-5 pb-10 space-y-5">
+              {/* Header */}
+              <div>
+                <h3 className="text-base font-bold text-white">Name your session</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Choose a name that makes it easy to find later
+                </p>
+              </div>
+
+              {/* Input */}
+              <input
+                type="text"
+                value={pendingName}
+                onChange={(e) => setPendingName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleConfirmSave()}
+                placeholder={session.name}
+                autoFocus
+                className="w-full bg-[#111827] border border-[#1a2340] rounded-xl px-4 py-3.5 text-sm text-white placeholder:text-slate-600 outline-none focus:border-blue-500/50 transition-colors"
+              />
+
+              {/* Confirm */}
+              <button
+                onClick={handleConfirmSave}
+                className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-2xl transition-all active:scale-[0.98] shadow-lg shadow-emerald-600/20"
+              >
+                Save Session
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </>
   );
